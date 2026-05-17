@@ -37,7 +37,7 @@ export async function onRequest(context) {
 
     const systemPrompt = buildSystemPrompt()
 
-    const deepseekResp = await fetch(env.DEEPSEEK_API, {
+    const deepseekResp = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

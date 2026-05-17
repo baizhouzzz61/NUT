@@ -26,7 +26,7 @@ export async function onRequest(context) {
       })
     }
 
-    const deepgramResp = await fetch(`${env.DEEPGRAM_API}?model=nova-2&smart_format=true`, {
+    const deepgramResp = await fetch(`https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true`, {
       method: 'POST',
       headers: {
         Authorization: `Token ${env.DEEPGRAM_API_KEY}`,
