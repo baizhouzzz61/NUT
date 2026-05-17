@@ -106,24 +106,22 @@ const columns = [
       No transcripts yet. Click "New Transcript" to start.
     </NText>
 
-    <NModal v-model:show="showModal" :title="editMode ? 'Edit Transcript' : 'New Transcript'" style="width: 700px">
-      <div style="padding: 20px">
-        <NInput v-model:value="form.title" placeholder="Title" style="margin-bottom: 16px" />
+    <NModal v-model:show="showModal" preset="card" :title="editMode ? 'Edit Transcript' : 'New Transcript'" style="width: 700px">
+      <NInput v-model:value="form.title" placeholder="Title" style="margin-bottom: 16px" />
 
-        <NSpin :show="transcribing" description="Transcribing..." style="margin-bottom: 16px">
-          <NUpload :show-file-list="false" accept=".mp3,.wav,.m4a,.flac" @change="handleUpload">
-            <NButton :loading="transcribing" secondary>Upload Audio & Transcribe</NButton>
-          </NUpload>
-        </NSpin>
+      <NSpin :show="transcribing" description="Transcribing..." style="margin-bottom: 16px">
+        <NUpload :show-file-list="false" accept=".mp3,.wav,.m4a,.flac" @change="handleUpload">
+          <NButton :loading="transcribing" secondary>Upload Audio & Transcribe</NButton>
+        </NUpload>
+      </NSpin>
 
-        <NInput
-          v-model:value="form.content"
-          type="textarea"
-          placeholder="Enter English text, or upload audio above"
-          :autosize="{ minRows: 8, maxRows: 20 }"
-          :input-props="{ spellcheck: true }"
-        />
-      </div>
+      <NInput
+        v-model:value="form.content"
+        type="textarea"
+        placeholder="Enter English text, or upload audio above"
+        :autosize="{ minRows: 8, maxRows: 20 }"
+        :input-props="{ spellcheck: true }"
+      />
 
       <template #footer>
         <NSpace justify="end">
