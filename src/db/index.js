@@ -8,7 +8,7 @@ db.version(1).stores({
 })
 
 export async function addTranscript(transcript) {
-  return db.transcripts.add({ ...transcript, createdAt: new Date(), updatedAt: new Date() })
+  return db.transcripts.add({ id: crypto.randomUUID(), ...transcript, createdAt: new Date(), updatedAt: new Date() })
 }
 
 export async function updateTranscript(id, data) {
@@ -28,7 +28,7 @@ export async function getTranscript(id) {
 }
 
 export async function addTopic(topic) {
-  return db.topics.add({ ...topic, createdAt: new Date() })
+  return db.topics.add({ id: crypto.randomUUID(), ...topic, createdAt: new Date() })
 }
 
 export async function getAllTopics() {

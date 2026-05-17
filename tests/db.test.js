@@ -43,6 +43,14 @@ describe('transcripts', () => {
     expect(t.title).toBe('X')
   })
 
+  it('auto-generates id when none provided', async () => {
+    const id = await addTranscript({ title: 'No ID', content: 'Content', source: 'manual' })
+    expect(id).toBeDefined()
+    const all = await getAllTranscripts()
+    expect(all).toHaveLength(1)
+    expect(all[0].title).toBe('No ID')
+  })
+
   it('sets createdAt and updatedAt on add', async () => {
     await addTranscript({ id: '1', title: 'T', content: 'C', source: 'manual' })
     const all = await getAllTranscripts()

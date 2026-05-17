@@ -38,9 +38,13 @@ async function saveTranscript() {
     message.warning('Title and content are required')
     return
   }
-  await store.saveTranscript({ ...form.value }, editingId.value)
-  showModal.value = false
-  message.success(editMode.value ? 'Updated' : 'Saved')
+  try {
+    await store.saveTranscript({ ...form.value }, editingId.value)
+    showModal.value = false
+    message.success(editMode.value ? 'Updated' : 'Saved')
+  } catch (e) {
+    message.error('Save failed: ' + (e.message || String(e)))
+  }
 }
 
 async function handleUpload({ file }) {
