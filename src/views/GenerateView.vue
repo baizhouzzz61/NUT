@@ -51,7 +51,7 @@ async function doGenerate() {
     generatedTopic.value = topic
     message.success('Topic generated')
   } catch (e) {
-    message.error(e.message)
+    message.error(e.message || String(e))
   } finally {
     generating.value = false
   }
