@@ -110,18 +110,19 @@ const columns = [
       <div style="padding: 20px">
         <NInput v-model:value="form.title" placeholder="Title" style="margin-bottom: 16px" />
 
-        <NUpload :show-file-list="false" accept=".mp3,.wav,.m4a,.flac" @change="handleUpload" style="margin-bottom: 16px">
-          <NButton :loading="transcribing" secondary>Upload Audio & Transcribe</NButton>
-        </NUpload>
-
-        <NSpin :show="transcribing" description="Transcribing...">
-          <NInput
-            v-model:value="form.content"
-            type="textarea"
-            placeholder="Enter English text, or upload audio above"
-            :autosize="{ minRows: 8, maxRows: 20 }"
-          />
+        <NSpin :show="transcribing" description="Transcribing..." style="margin-bottom: 16px">
+          <NUpload :show-file-list="false" accept=".mp3,.wav,.m4a,.flac" @change="handleUpload">
+            <NButton :loading="transcribing" secondary>Upload Audio & Transcribe</NButton>
+          </NUpload>
         </NSpin>
+
+        <NInput
+          v-model:value="form.content"
+          type="textarea"
+          placeholder="Enter English text, or upload audio above"
+          :autosize="{ minRows: 8, maxRows: 20 }"
+          :input-props="{ spellcheck: true }"
+        />
       </div>
 
       <template #footer>
