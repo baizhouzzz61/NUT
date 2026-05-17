@@ -1,3 +1,5 @@
+import { buildSystemPrompt, parseTopicResponse } from '../../src/shared/schema.js'
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
@@ -73,24 +75,9 @@ async function handleGenerateTopic(request, env, corsHeaders) {
     .map((t, i) => `[Transcript ${i + 1}: "${t.title}"]\n${t.content}`)
     .join('\n\n')
 
-  const systemPrompt = `You are an English speaking practice tutor. Generate a random conversation topic along with example sentences for practice.
-
-Rules:
-1. The topic should be random and engaging — do NOT derive it from the provided transcripts.
-2. Provide the topic title and a list of example sentences.
-3. At least 50% of the example sentences MUST be taken verbatim from the provided transcripts. Mark each sentence with its source: "ai" for AI-generated, or the transcript index (e.g., "transcript:1") for sentences from transcripts.
-4. The remaining sentences can be AI-generated to complement the practice.
-
-Return ONLY valid JSON in this exact format:
-{
-  "title": "Topic title here",
-  "examples": [
-    { "text": "Example sentence", "source": "ai" },
-    { "text": "Verbatim sentence from transcript", "source": "transcript:1" }
-  ]
-}`
-
   const userMessage = `Generate a speaking practice topic using these transcripts as example sources:\n\n${transcriptTexts}`
+
+  const systemPrompt = buildSystemPrompt()
 
   const deepseekResp = await fetch(env.DEEPSEEK_API, {
     method: 'POST',
@@ -118,8 +105,7 @@ Return ONLY valid JSON in this exact format:
   }
 
   const content = data.choices[0].message.content
-  const jsonMatch = content.match(/\{[\s\S]*\}/)
-  const topic = JSON.parse(jsonMatch[0])
+  const topic = parseTopicResponse(content)
 
   return new Response(JSON.stringify({ topic }), {
     headers: { 'Content-Type': 'application/json', ...corsHeaders },

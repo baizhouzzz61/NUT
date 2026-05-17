@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useTranscriptStore } from '../stores/transcript'
 import { useTopicStore } from '../stores/topic'
 import { generateTopic } from '../api'
+import { enrichExamples, SOURCE_AI } from '../shared/schema'
 import {
   NButton, NCheckbox, NDataTable, NModal, NText, NH1, NSpace,
   NCard, NTag, NDivider, NSpin, NPopconfirm, useMessage
@@ -38,14 +39,7 @@ async function doGenerate() {
     const slim = selected.map(({ id, title, content }) => ({ id, title, content }))
     const { topic } = await generateTopic(slim)
 
-    const srcMap = {}
-    slim.forEach((t, i) => { srcMap[`transcript:${i + 1}`] = { id: t.id, title: t.title } })
-
-    topic.examples = topic.examples.map(ex => ({
-      ...ex,
-      transcriptId: srcMap[ex.source]?.id || null,
-      transcriptTitle: srcMap[ex.source]?.title || null,
-    }))
+    topic.examples = enrichExamples(topic.examples, slim)
     topic.usedTranscriptIds = slim.map(t => t.id)
 
     generatedTopic.value = topic
@@ -104,11 +98,11 @@ function preview(topic) {
         </template>
         <div v-for="(ex, i) in generatedTopic.examples" :key="i" style="margin-bottom: 8px">
           <div :style="{ padding: '8px 12px', borderRadius: '6px',
-            background: ex.source !== 'ai' ? '#f0f9eb' : 'transparent',
-            border: ex.source !== 'ai' ? '1px solid #b3e19d' : '1px solid #eee' }">
+            background: ex.source !== SOURCE_AI ? '#f0f9eb' : 'transparent',
+            border: ex.source !== SOURCE_AI ? '1px solid #b3e19d' : '1px solid #eee' }">
             {{ i + 1 }}. {{ ex.text }}
-            <NTag size="tiny" :type="ex.source !== 'ai' ? 'success' : 'default'" style="margin-left: 8px">
-              {{ ex.source !== 'ai' ? `From: ${ex.transcriptTitle}` : 'AI' }}
+            <NTag size="tiny" :type="ex.source !== SOURCE_AI ? 'success' : 'default'" style="margin-left: 8px">
+              {{ ex.source !== SOURCE_AI ? `From: ${ex.transcriptTitle}` : 'AI' }}
             </NTag>
           </div>
         </div>
@@ -120,11 +114,11 @@ function preview(topic) {
     <div v-if="previewTopic" style="padding: 8px">
       <div v-for="(ex, i) in previewTopic.examples" :key="i" style="margin-bottom: 8px">
         <div :style="{ padding: '8px 12px', borderRadius: '6px',
-          background: ex.source !== 'ai' ? '#f0f9eb' : 'transparent',
-          border: ex.source !== 'ai' ? '1px solid #b3e19d' : '1px solid #eee' }">
+          background: ex.source !== SOURCE_AI ? '#f0f9eb' : 'transparent',
+          border: ex.source !== SOURCE_AI ? '1px solid #b3e19d' : '1px solid #eee' }">
           {{ i + 1 }}. {{ ex.text }}
-          <NTag size="tiny" :type="ex.source !== 'ai' ? 'success' : 'default'" style="margin-left: 8px">
-            {{ ex.source !== 'ai' ? `From: ${ex.transcriptTitle}` : 'AI' }}
+          <NTag size="tiny" :type="ex.source !== SOURCE_AI ? 'success' : 'default'" style="margin-left: 8px">
+            {{ ex.source !== SOURCE_AI ? `From: ${ex.transcriptTitle}` : 'AI' }}
           </NTag>
         </div>
       </div>

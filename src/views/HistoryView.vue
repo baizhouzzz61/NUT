@@ -2,6 +2,7 @@
 import { ref, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTopicStore } from '../stores/topic'
+import { SOURCE_AI } from '../shared/schema'
 import {
   NButton, NDataTable, NModal, NTabs, NTabPane, NText, NH1,
   NSpace, NTag, NCard, useMessage
@@ -66,18 +67,18 @@ const columns = [
           <NTabPane name="all" tab="All Examples">
             <div v-for="(ex, i) in previewTopic.examples" :key="i" style="margin-bottom: 8px">
               <NCard :bordered="false" size="small"
-                :style="ex.source !== 'ai'
+                :style="ex.source !== SOURCE_AI
                   ? 'background: #f0f9eb; border: 1px solid #b3e19d'
                   : 'background: var(--n-color); border: 1px solid var(--n-border-color)'">
                 <NText>{{ i + 1 }}. {{ ex.text }}</NText>
-                <NTag size="tiny" :type="ex.source !== 'ai' ? 'success' : 'default'" style="margin-left: 12px">
-                  {{ ex.source !== 'ai' ? `From: ${ex.transcriptTitle}` : 'AI' }}
+                <NTag size="tiny" :type="ex.source !== SOURCE_AI ? 'success' : 'default'" style="margin-left: 12px">
+                  {{ ex.source !== SOURCE_AI ? `From: ${ex.transcriptTitle}` : 'AI' }}
                 </NTag>
               </NCard>
             </div>
           </NTabPane>
           <NTabPane name="source" tab="From Transcripts">
-            <div v-for="(ex, i) in previewTopic.examples.filter(e => e.source !== 'ai')" :key="i" style="margin-bottom: 8px">
+            <div v-for="(ex, i) in previewTopic.examples.filter(e => e.source !== SOURCE_AI)" :key="i" style="margin-bottom: 8px">
               <NCard :bordered="false" size="small" style="background: #f0f9eb; border: 1px solid #b3e19d">
                 <NText>{{ i + 1 }}. {{ ex.text }}</NText>
                 <NTag size="tiny" type="success" style="margin-left: 12px">
@@ -85,7 +86,7 @@ const columns = [
                 </NTag>
               </NCard>
             </div>
-            <NText v-if="!previewTopic.examples.filter(e => e.source !== 'ai').length" depth="3">
+            <NText v-if="!previewTopic.examples.filter(e => e.source !== SOURCE_AI).length" depth="3">
               No examples from transcripts.
             </NText>
           </NTabPane>
