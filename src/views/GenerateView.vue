@@ -7,7 +7,7 @@ import { generateTopic } from '../api'
 import { enrichExamples } from '../shared/schema'
 import ExampleSentence from '../components/ExampleSentence.vue'
 import {
-  NButton, NCheckbox, NDataTable, NModal, NText, NH1, NSpace,
+  NButton, NCheckbox, NInput, NModal, NText, NH1, NSpace,
   NCard, NTag, NDivider, NSpin, NPopconfirm, useMessage
 } from 'naive-ui'
 
@@ -16,6 +16,7 @@ const transcriptStore = useTranscriptStore()
 const topicStore = useTopicStore()
 const message = useMessage()
 
+const topicPrompt = ref('')
 const selectedIds = ref(new Set())
 const generating = ref(false)
 const generatedTopic = ref(null)
@@ -30,6 +31,10 @@ function toggleSelect(id) {
 }
 
 async function doGenerate() {
+  if (!topicPrompt.value.trim()) {
+    message.warning('Please describe the topic you want')
+    return
+  }
   if (selectedIds.value.size === 0) {
     message.warning('Select at least one transcript')
     return
@@ -38,7 +43,7 @@ async function doGenerate() {
   try {
     const selected = transcriptStore.transcripts.filter(t => selectedIds.value.has(t.id))
     const slim = selected.map(({ id, title, content }) => ({ id, title, content }))
-    const { topic } = await generateTopic(slim)
+    const { topic } = await generateTopic(slim, topicPrompt.value.trim())
 
     topic.examples = enrichExamples(topic.examples, slim)
     topic.usedTranscriptIds = slim.map(t => t.id)
@@ -74,7 +79,16 @@ function preview(topic) {
       </NSpace>
     </div>
 
-    <NCard title="1. Select source transcripts" size="small" style="margin-bottom: 16px">
+    <NCard title="1. What topic do you want?" size="small" style="margin-bottom: 16px">
+      <NInput
+        v-model:value="topicPrompt"
+        type="textarea"
+        placeholder="Describe the topic you want to practice, e.g. 'ordering coffee at a cafe' or 'talking about weekend plans with friends'"
+        :autosize="{ minRows: 2, maxRows: 4 }"
+      />
+    </NCard>
+
+    <NCard title="2. Select source transcripts" size="small" style="margin-bottom: 16px">
       <NText depth="3" v-if="!transcriptStore.transcripts.length">
         No transcripts yet — go to Library to add some.
       </NText>
@@ -88,8 +102,8 @@ function preview(topic) {
       </div>
     </NCard>
 
-    <NButton type="primary" :loading="generating" @click="doGenerate" :disabled="selectedIds.size === 0" block>
-      {{ generating ? 'Generating...' : `2. Generate Topic (${selectedIds.size} transcripts selected)` }}
+    <NButton type="primary" :loading="generating" @click="doGenerate" :disabled="selectedIds.size === 0 || !topicPrompt.trim()" block>
+      {{ generating ? 'Generating...' : `3. Generate Topic (${selectedIds.size} transcripts selected)` }}
     </NButton>
 
     <div v-if="generatedTopic" style="margin-top: 24px">

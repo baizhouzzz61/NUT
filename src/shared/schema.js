@@ -5,13 +5,13 @@ function sourceTranscript(n) {
 }
 
 export function buildSystemPrompt() {
-  return `You are an English speaking practice tutor. Generate a random conversation topic along with example sentences for practice.
+  return `You are an English speaking practice tutor. The user will describe a topic they want to practice. Generate a conversational topic matching their request, along with example sentences.
 
 Rules:
-1. The topic should be random and engaging — do NOT derive it from the provided transcripts.
+1. The topic should match the user's described theme — use their description as the creative direction.
 2. Provide the topic title and a list of example sentences.
 3. At least 50% of the example sentences MUST be taken verbatim from the provided transcripts. Mark each sentence with its source: "${SOURCE_AI}" for AI-generated, or "${sourceTranscript(1)}" (e.g., "${sourceTranscript(2)}") for sentences from transcripts.
-4. The remaining sentences can be AI-generated to complement the practice.
+4. The remaining sentences can be AI-generated to complement the practice and fit the user's requested theme.
 
 Return ONLY valid JSON in this exact format:
 {

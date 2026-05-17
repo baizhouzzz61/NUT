@@ -163,6 +163,33 @@ describe('generate-topic endpoint', () => {
     const res = await worker.fetch(req, buildEnv())
     expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*')
   })
+
+  it('includes userPrompt in the user message when provided', async () => {
+    const deepseekResponse = {
+      choices: [{
+        message: {
+          content: '{"title": "Coffee Talk", "examples": [{"text": "Latte please", "source": "transcript:1"}]}',
+        },
+      }],
+    }
+    global.fetch = vi.fn().mockResolvedValue({
+      json: () => Promise.resolve(deepseekResponse),
+    })
+
+    const req = new Request('http://localhost/api/generate-topic', {
+      method: 'POST',
+      body: JSON.stringify({
+        transcripts: [{ id: '1', title: 'Cafe', content: 'One latte.' }],
+        userPrompt: 'ordering coffee at a cafe',
+      }),
+    })
+    const res = await worker.fetch(req, buildEnv())
+    expect(res.status).toBe(200)
+
+    const [, deepseekOpts] = fetch.mock.calls[0]
+    const body = JSON.parse(deepseekOpts.body)
+    expect(body.messages[1].content).toContain('ordering coffee at a cafe')
+  })
 })
 
 describe('worker error boundary', () => {

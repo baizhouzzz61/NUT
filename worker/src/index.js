@@ -62,7 +62,7 @@ async function handleTranscribe(request, env, corsHeaders) {
 }
 
 async function handleGenerateTopic(request, env, corsHeaders) {
-  const { transcripts } = await request.json()
+  const { transcripts, userPrompt } = await request.json()
 
   if (!transcripts || !transcripts.length) {
     return new Response(JSON.stringify({ error: 'No transcripts provided' }), {
@@ -75,7 +75,8 @@ async function handleGenerateTopic(request, env, corsHeaders) {
     .map((t, i) => `[Transcript ${i + 1}: "${t.title}"]\n${t.content}`)
     .join('\n\n')
 
-  const userMessage = `Generate a speaking practice topic using these transcripts as example sources:\n\n${transcriptTexts}`
+  const promptHint = userPrompt ? `The user wants a topic about: "${userPrompt}".` : ''
+  const userMessage = `${promptHint} Generate a speaking practice topic using these transcripts as example sources:\n\n${transcriptTexts}`
 
   const systemPrompt = buildSystemPrompt()
 

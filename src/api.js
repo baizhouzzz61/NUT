@@ -11,11 +11,11 @@ export async function transcribeAudio(audioFile) {
   return res.json()
 }
 
-export async function generateTopic(transcripts) {
+export async function generateTopic(transcripts, userPrompt) {
   const res = await fetch(`${API_BASE}/api/generate-topic`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ transcripts }),
+    body: JSON.stringify({ transcripts, userPrompt }),
   })
   if (!res.ok) {
     const err = await res.json()
