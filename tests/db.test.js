@@ -1,11 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { addTranscript, getAllTranscripts, updateTranscript, deleteTranscript, addTopic, getAllTopics, getTranscript, getTopic } from '../src/db'
+import { addTranscript, getAllTranscripts, updateTranscript, deleteTranscript, addTopic, getAllTopics, getTranscript, clearAll } from '../src/db'
 
 beforeEach(async () => {
-  // Clear all tables before each test
-  const db = (await import('../src/db')).default
-  await db.transcripts.clear()
-  await db.topics.clear()
+  await clearAll()
 })
 
 describe('transcripts', () => {
@@ -75,9 +72,5 @@ describe('topics', () => {
     expect(all[0].title).toBe('New')
   })
 
-  it('gets a single topic by id', async () => {
-    await addTopic({ id: 'abc', title: 'Topic ABC', examples: [], usedTranscriptIds: [] })
-    const t = await getTopic('abc')
-    expect(t.title).toBe('Topic ABC')
-  })
 })
+

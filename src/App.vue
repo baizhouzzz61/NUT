@@ -1,5 +1,5 @@
 <script setup>
-import { NMessageProvider, NConfigProvider, zhCN, darkTheme } from 'naive-ui'
+import { NMessageProvider, NConfigProvider, zhCN } from 'naive-ui'
 </script>
 
 <template>

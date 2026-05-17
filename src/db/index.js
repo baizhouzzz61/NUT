@@ -31,16 +31,11 @@ export async function addTopic(topic) {
   return db.topics.add({ ...topic, createdAt: new Date() })
 }
 
-export async function deleteTopic(id) {
-  return db.topics.delete(id)
-}
-
 export async function getAllTopics() {
   return db.topics.orderBy('createdAt').reverse().toArray()
 }
 
-export async function getTopic(id) {
-  return db.topics.get(id)
+export async function clearAll() {
+  await db.transcripts.clear()
+  await db.topics.clear()
 }
-
-export default db

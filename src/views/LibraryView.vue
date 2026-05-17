@@ -101,7 +101,7 @@ const columns = [
       </NSpace>
     </div>
 
-    <NDataTable :columns="columns" :data="store.sortedTranscripts" :bordered="false" />
+    <NDataTable :columns="columns" :data="store.transcripts" :bordered="false" />
     <NText v-if="!store.transcripts.length" depth="3" style="display: block; text-align: center; margin-top: 60px">
       No transcripts yet. Click "New Transcript" to start.
     </NText>

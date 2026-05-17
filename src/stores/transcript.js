@@ -1,14 +1,10 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { addTranscript, updateTranscript, deleteTranscript, getAllTranscripts } from '../db'
 
 export const useTranscriptStore = defineStore('transcript', () => {
   const transcripts = ref([])
   const loading = ref(false)
-
-  const sortedTranscripts = computed(() =>
-    [...transcripts.value].sort((a, b) => b.createdAt - a.createdAt)
-  )
 
   async function loadTranscripts() {
     loading.value = true
@@ -32,5 +28,5 @@ export const useTranscriptStore = defineStore('transcript', () => {
 
   loadTranscripts()
 
-  return { transcripts, loading, sortedTranscripts, loadTranscripts, saveTranscript, removeTranscript }
+  return { transcripts, loading, loadTranscripts, saveTranscript, removeTranscript }
 })
