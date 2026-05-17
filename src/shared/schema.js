@@ -1,25 +1,16 @@
-export const SOURCE_AI = 'ai'
-
-function sourceTranscript(n) {
-  return `transcript:${n}`
-}
-
 export function buildSystemPrompt() {
-  return `You are an English speaking practice tutor. The user will describe a topic they want to practice. Generate a conversational topic matching their request, along with example sentences.
+  return `You are an English speaking practice tutor. The user will describe a topic they want to practice. Generate a continuous, flowing conversation dialogue matching their request.
 
 Rules:
-1. The topic should match the user's described theme — use their description as the creative direction.
-2. Provide the topic title and a list of example sentences.
-3. At least 50% of the example sentences MUST be taken verbatim from the provided transcripts. Mark each sentence with its source: "${SOURCE_AI}" for AI-generated, or "${sourceTranscript(1)}" (e.g., "${sourceTranscript(2)}") for sentences from transcripts.
-4. The remaining sentences can be AI-generated to complement the practice and fit the user's requested theme.
+1. The ENTIRE response must be in English — never output Chinese or any other language.
+2. Generate a single long, continuous conversation passage: a back-and-forth dialogue between 2-3 speakers (labeled as A:, B:, etc.). Do NOT output individual sentences, bullet points, or a numbered list.
+3. Weave material from the provided transcripts naturally into the dialogue. You may adapt and modify transcript sentences — change a few words, rephrase slightly — to fit the conversation flow and the user's requested topic. They do not need to be 100% verbatim.
+4. At least 50% of the dialogue content should be derived or adapted from the provided transcripts.
 
 Return ONLY valid JSON in this exact format:
 {
   "title": "Topic title here",
-  "examples": [
-    { "text": "Example sentence", "source": "${SOURCE_AI}" },
-    { "text": "Verbatim sentence from transcript", "source": "${sourceTranscript(1)}" }
-  ]
+  "passage": "The full continuous dialogue as a single string with speaker labels like A: ... B: ..."
 }`
 }
 
@@ -28,7 +19,10 @@ export function parseTopicResponse(text) {
     throw new Error('Empty response from LLM')
   }
 
-  const match = text.match(/\{[\s\S]*\}/)
+  // Strip markdown code fences that LLMs sometimes wrap JSON in
+  let cleaned = text.replace(/```(?:json)?\s*/gi, '').replace(/```\s*/g, '').trim()
+
+  const match = cleaned.match(/\{[\s\S]*\}/)
   if (!match) {
     throw new Error('No JSON found in LLM response')
   }
@@ -43,31 +37,9 @@ export function parseTopicResponse(text) {
   if (!data.title || typeof data.title !== 'string') {
     throw new Error('Topic missing valid title')
   }
-  if (!Array.isArray(data.examples) || data.examples.length === 0) {
-    throw new Error('Topic missing examples array')
-  }
-  for (let i = 0; i < data.examples.length; i++) {
-    const ex = data.examples[i]
-    if (!ex.text || typeof ex.text !== 'string') {
-      throw new Error(`Example ${i} missing text`)
-    }
-    if (!ex.source || typeof ex.source !== 'string') {
-      throw new Error(`Example ${i} missing source`)
-    }
+  if (!data.passage || typeof data.passage !== 'string' || !data.passage.trim()) {
+    throw new Error('Topic missing passage')
   }
 
   return data
-}
-
-export function enrichExamples(examples, transcripts) {
-  const srcMap = {}
-  transcripts.forEach((t, i) => {
-    srcMap[sourceTranscript(i + 1)] = { id: t.id, title: t.title }
-  })
-
-  return examples.map(ex => ({
-    ...ex,
-    transcriptId: srcMap[ex.source]?.id || null,
-    transcriptTitle: srcMap[ex.source]?.title || null,
-  }))
 }

@@ -4,11 +4,9 @@ import { useRouter } from 'vue-router'
 import { useTranscriptStore } from '../stores/transcript'
 import { useTopicStore } from '../stores/topic'
 import { generateTopic } from '../api'
-import { enrichExamples } from '../shared/schema'
-import ExampleSentence from '../components/ExampleSentence.vue'
 import {
   NButton, NCheckbox, NInput, NModal, NText, NH1, NSpace,
-  NCard, NTag, NDivider, NSpin, NPopconfirm, useMessage
+  NCard, NTag, NSpin, useMessage
 } from 'naive-ui'
 
 const router = useRouter()
@@ -20,8 +18,6 @@ const topicPrompt = ref('')
 const selectedIds = ref(new Set())
 const generating = ref(false)
 const generatedTopic = ref(null)
-const showPreview = ref(false)
-const previewTopic = ref(null)
 
 function toggleSelect(id) {
   const next = new Set(selectedIds.value)
@@ -45,7 +41,6 @@ async function doGenerate() {
     const slim = selected.map(({ id, title, content }) => ({ id, title, content }))
     const { topic } = await generateTopic(slim, topicPrompt.value.trim())
 
-    topic.examples = enrichExamples(topic.examples, slim)
     topic.usedTranscriptIds = slim.map(t => t.id)
 
     generatedTopic.value = topic
@@ -61,11 +56,6 @@ async function saveGenerated() {
   await topicStore.saveTopic(generatedTopic.value)
   message.success('Topic saved to history')
   generatedTopic.value = null
-}
-
-function preview(topic) {
-  previewTopic.value = topic
-  showPreview.value = true
 }
 </script>
 
@@ -111,22 +101,10 @@ function preview(topic) {
         <template #header-extra>
           <NButton type="primary" size="small" @click="saveGenerated">Save to History</NButton>
         </template>
-        <ExampleSentence
-          v-for="(ex, i) in generatedTopic.examples" :key="i"
-          :index="i + 1" :text="ex.text" :source="ex.source" :transcript-title="ex.transcriptTitle"
-          style="margin-bottom: 8px"
-        />
+        <div style="white-space: pre-wrap; line-height: 1.8; font-size: 16px">
+          {{ generatedTopic.passage }}
+        </div>
       </NCard>
     </div>
   </div>
-
-  <NModal v-model:show="showPreview" title="Topic Detail" style="width: 700px">
-    <div v-if="previewTopic" style="padding: 8px">
-      <ExampleSentence
-        v-for="(ex, i) in previewTopic.examples" :key="i"
-        :index="i + 1" :text="ex.text" :source="ex.source" :transcript-title="ex.transcriptTitle"
-        style="margin-bottom: 8px"
-      />
-    </div>
-  </NModal>
 </template>

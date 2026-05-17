@@ -1,43 +1,46 @@
 import { describe, it, expect } from 'vitest'
-import { SOURCE_AI, buildSystemPrompt, parseTopicResponse, enrichExamples } from '../src/shared/schema'
-
-describe('SOURCE_AI', () => {
-  it('is the string "ai"', () => {
-    expect(SOURCE_AI).toBe('ai')
-  })
-})
+import { buildSystemPrompt, parseTopicResponse } from '../src/shared/schema'
 
 describe('buildSystemPrompt', () => {
+  it('requires English-only output', () => {
+    const prompt = buildSystemPrompt()
+    expect(prompt).toContain('English')
+    expect(prompt).toContain('never output Chinese')
+  })
+
+  it('requires continuous passage, not individual sentences', () => {
+    const prompt = buildSystemPrompt()
+    expect(prompt).toContain('continuous')
+    expect(prompt).toContain('passage')
+    expect(prompt).toContain('speaker labels')
+  })
+
+  it('allows adapting transcript sentences', () => {
+    const prompt = buildSystemPrompt()
+    expect(prompt).toContain('adapt')
+    expect(prompt).toContain('not need to be 100% verbatim')
+  })
+
   it('includes the 50% rule', () => {
     const prompt = buildSystemPrompt()
     expect(prompt).toContain('50%')
-    expect(prompt).toContain('verbatim')
   })
 
-  it('includes SOURCE_AI and transcript source format', () => {
-    const prompt = buildSystemPrompt()
-    expect(prompt).toContain('"ai"')
-    expect(prompt).toContain('"transcript:1"')
-  })
-
-  it('includes JSON schema in the prompt', () => {
+  it('includes JSON schema with title and passage', () => {
     const prompt = buildSystemPrompt()
     expect(prompt).toContain('"title"')
-    expect(prompt).toContain('"examples"')
-    expect(prompt).toContain('"text"')
-    expect(prompt).toContain('"source"')
+    expect(prompt).toContain('"passage"')
   })
 })
 
 describe('parseTopicResponse', () => {
-  const validJson = '{"title": "My Topic", "examples": [{"text": "Hello", "source": "ai"}, {"text": "World", "source": "transcript:1"}]}'
+  const validJson = '{"title": "My Topic", "passage": "A: Hello\\nB: Hi there\\nA: How are you?"}'
 
   it('parses a valid topic JSON', () => {
     const topic = parseTopicResponse(validJson)
     expect(topic.title).toBe('My Topic')
-    expect(topic.examples).toHaveLength(2)
-    expect(topic.examples[0].text).toBe('Hello')
-    expect(topic.examples[0].source).toBe('ai')
+    expect(topic.passage).toContain('Hello')
+    expect(topic.passage).toContain('Hi there')
   })
 
   it('parses JSON wrapped in extra text (LLM output)', () => {
@@ -60,67 +63,19 @@ describe('parseTopicResponse', () => {
   })
 
   it('throws on invalid JSON', () => {
-    expect(() => parseTopicResponse('{"title": "X", "examples": [}')).toThrow('Failed to parse')
+    expect(() => parseTopicResponse('{"title": "X", "passage": broken}')).toThrow('Failed to parse')
   })
 
   it('throws when title is missing', () => {
-    expect(() => parseTopicResponse('{"examples": []}')).toThrow('missing valid title')
+    expect(() => parseTopicResponse('{"passage": "Hello"}')).toThrow('missing valid title')
   })
 
-  it('throws when examples is not an array', () => {
-    expect(() => parseTopicResponse('{"title": "X", "examples": "not-array"}')).toThrow('missing examples array')
+  it('throws when passage is missing', () => {
+    expect(() => parseTopicResponse('{"title": "X"}')).toThrow('missing passage')
   })
 
-  it('throws when examples is empty', () => {
-    expect(() => parseTopicResponse('{"title": "X", "examples": []}')).toThrow('missing examples array')
-  })
-
-  it('throws when an example is missing text', () => {
-    expect(() => parseTopicResponse('{"title": "X", "examples": [{"source": "ai"}]}')).toThrow('missing text')
-  })
-
-  it('throws when an example is missing source', () => {
-    expect(() => parseTopicResponse('{"title": "X", "examples": [{"text": "hello"}]}')).toThrow('missing source')
-  })
-})
-
-describe('enrichExamples', () => {
-  const examples = [
-    { text: 'AI sentence', source: 'ai' },
-    { text: 'From transcript', source: 'transcript:1' },
-    { text: 'Also from transcript', source: 'transcript:2' },
-  ]
-
-  const transcripts = [
-    { id: 't1', title: 'First' },
-    { id: 't2', title: 'Second' },
-  ]
-
-  it('enriches transcript-sourced examples with id and title', () => {
-    const enriched = enrichExamples(examples, transcripts)
-    expect(enriched[1].transcriptId).toBe('t1')
-    expect(enriched[1].transcriptTitle).toBe('First')
-    expect(enriched[2].transcriptId).toBe('t2')
-    expect(enriched[2].transcriptTitle).toBe('Second')
-  })
-
-  it('leaves AI-sourced examples with null transcript fields', () => {
-    const enriched = enrichExamples(examples, transcripts)
-    expect(enriched[0].transcriptId).toBeNull()
-    expect(enriched[0].transcriptTitle).toBeNull()
-    expect(enriched[0].source).toBe('ai')
-  })
-
-  it('preserves all original fields', () => {
-    const enriched = enrichExamples(examples, transcripts)
-    expect(enriched[0].text).toBe('AI sentence')
-    expect(enriched[0].source).toBe('ai')
-  })
-
-  it('handles unknown source keys by assigning nulls', () => {
-    const unknownSource = [{ text: 'Mystery', source: 'transcript:99' }]
-    const enriched = enrichExamples(unknownSource, transcripts)
-    expect(enriched[0].transcriptId).toBeNull()
-    expect(enriched[0].transcriptTitle).toBeNull()
+  it('throws when passage is empty', () => {
+    expect(() => parseTopicResponse('{"title": "X", "passage": ""}')).toThrow('missing passage')
+    expect(() => parseTopicResponse('{"title": "X", "passage": "   "}')).toThrow('missing passage')
   })
 })
