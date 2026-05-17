@@ -7,9 +7,9 @@ const worker = workerModule.default || workerModule
 function buildEnv(overrides = {}) {
   return {
     DEEPGRAM_API: 'https://api.deepgram.com/v1/listen',
-    ANTHROPIC_API: 'https://api.anthropic.com/v1/messages',
+    DEEPSEEK_API: 'https://api.deepseek.com/v1/chat/completions',
     DEEPGRAM_API_KEY: 'dg-key',
-    ANTHROPIC_API_KEY: 'anthro-key',
+    DEEPSEEK_API_KEY: 'ds-key',
     ...overrides,
   }
 }
@@ -93,15 +93,17 @@ describe('generate-topic endpoint', () => {
     expect(res.status).toBe(400)
   })
 
-  it('proxies transcript data to Claude and returns parsed topic', async () => {
-    const claudeResponse = {
-      content: [{
-        text: '{"title": "Technology and Life", "examples": [{"text": "Hello there", "source": "transcript:1"}, {"text": "AI is powerful", "source": "ai"}]}',
+  it('proxies transcript data to DeepSeek and returns parsed topic', async () => {
+    const deepseekResponse = {
+      choices: [{
+        message: {
+          content: '{"title": "Technology and Life", "examples": [{"text": "Hello there", "source": "transcript:1"}, {"text": "AI is powerful", "source": "ai"}]}',
+        },
       }],
     }
 
     global.fetch = vi.fn().mockResolvedValue({
-      json: () => Promise.resolve(claudeResponse),
+      json: () => Promise.resolve(deepseekResponse),
     })
 
     const transcripts = [{ id: '1', title: 'Tech Talk', content: 'Hello there. This is about tech.' }]
@@ -118,18 +120,19 @@ describe('generate-topic endpoint', () => {
     expect(data.topic.examples[0].source).toBe('transcript:1')
     expect(data.topic.examples[1].source).toBe('ai')
 
-    // Verify Claude was called correctly
-    const [claudeUrl, claudeOpts] = fetch.mock.calls[0]
-    expect(claudeUrl).toContain('api.anthropic.com')
-    expect(claudeOpts.headers['x-api-key']).toBe('anthro-key')
-    const body = JSON.parse(claudeOpts.body)
-    expect(body.model).toBe('claude-sonnet-4-6')
-    expect(body.system).toContain('50%')
-    expect(body.system).toContain('verbatim')
-    expect(body.messages[0].content).toContain('Tech Talk')
+    // Verify DeepSeek was called correctly
+    const [deepseekUrl, deepseekOpts] = fetch.mock.calls[0]
+    expect(deepseekUrl).toContain('api.deepseek.com')
+    expect(deepseekOpts.headers.Authorization).toBe('Bearer ds-key')
+    const body = JSON.parse(deepseekOpts.body)
+    expect(body.model).toBe('deepseek-chat')
+    expect(body.messages[0].role).toBe('system')
+    expect(body.messages[0].content).toContain('50%')
+    expect(body.messages[0].content).toContain('verbatim')
+    expect(body.messages[1].content).toContain('Tech Talk')
   })
 
-  it('returns 500 on Claude API error', async () => {
+  it('returns 500 on DeepSeek API error', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       json: () => Promise.resolve({ error: { message: 'Invalid API key' } }),
     })
@@ -146,11 +149,11 @@ describe('generate-topic endpoint', () => {
   })
 
   it('returns CORS headers on topic response', async () => {
-    const claudeResponse = {
-      content: [{ text: '{"title": "X", "examples": []}' }],
+    const deepseekResponse = {
+      choices: [{ message: { content: '{"title": "X", "examples": []}' } }],
     }
     global.fetch = vi.fn().mockResolvedValue({
-      json: () => Promise.resolve(claudeResponse),
+      json: () => Promise.resolve(deepseekResponse),
     })
 
     const req = new Request('http://localhost/api/generate-topic', {

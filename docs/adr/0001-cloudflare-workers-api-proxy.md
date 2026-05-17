@@ -6,14 +6,14 @@ Accepted
 
 ## Context
 
-NUT is a single-user web application that calls two external AI APIs: Deepgram (speech-to-text) and Claude (LLM for topic generation). These APIs require secret keys that cannot be exposed in browser-side JavaScript. We need a way to proxy requests without building and hosting a full backend server.
+NUT is a single-user web application that calls two external AI APIs: Deepgram (speech-to-text) and DeepSeek (LLM for topic generation). These APIs require secret keys that cannot be exposed in browser-side JavaScript. We need a way to proxy requests without building and hosting a full backend server.
 
 ## Decision
 
 Use **Cloudflare Workers** to proxy API calls. Two endpoints:
 
 - `POST /api/transcribe` — forwards audio to Deepgram, returns transcript
-- `POST /api/generate-topic` — forwards prompt to Claude, returns topic
+- `POST /api/generate-topic` — forwards prompt to DeepSeek, returns topic
 
 Worker secrets store the API keys. The frontend calls the Worker URL, never the third-party APIs directly.
 

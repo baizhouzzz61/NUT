@@ -92,22 +92,23 @@ Return ONLY valid JSON in this exact format:
 
   const userMessage = `Generate a speaking practice topic using these transcripts as example sources:\n\n${transcriptTexts}`
 
-  const anthropicResp = await fetch(env.ANTHROPIC_API, {
+  const deepseekResp = await fetch(env.DEEPSEEK_API, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
+      Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
+      model: 'deepseek-chat',
       max_tokens: 4096,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
     }),
   })
 
-  const data = await anthropicResp.json()
+  const data = await deepseekResp.json()
 
   if (data.error) {
     return new Response(JSON.stringify({ error: data.error.message }), {
@@ -116,7 +117,7 @@ Return ONLY valid JSON in this exact format:
     })
   }
 
-  const content = data.content[0].text
+  const content = data.choices[0].message.content
   const jsonMatch = content.match(/\{[\s\S]*\}/)
   const topic = JSON.parse(jsonMatch[0])
 

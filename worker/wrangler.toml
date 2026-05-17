@@ -4,4 +4,4 @@ compatibility_date = "2024-01-01"
 
 [vars]
 DEEPGRAM_API = "https://api.deepgram.com/v1/listen"
-ANTHROPIC_API = "https://api.anthropic.com/v1/messages"
+DEEPSEEK_API = "https://api.deepseek.com/v1/chat/completions"

@@ -40,6 +40,7 @@ NUT is a single-user web application that allows the user to upload English audi
 - Dexie.js for IndexedDB
 - Cloudflare Workers for API proxy
 - Deepgram (Nova-2 model, smart_format) for speech-to-text
+- DeepSeek (deepseek-chat) for topic generation
 - Claude (Anthropic API, claude-sonnet-4-6) for topic generation
 
 ### Data model
