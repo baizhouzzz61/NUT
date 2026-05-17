@@ -97,7 +97,7 @@ describe('generate-topic endpoint', () => {
     const deepseekResponse = {
       choices: [{
         message: {
-          content: '{"title": "Greetings", "passage": "A: Hello there!\\nB: Hi! How are you?\\nA: I am doing great."}',
+          content: '{"title": "Greetings", "segments": [{"text": "A: Hello there!\\n", "source": "ai"}, {"text": "B: Hi! How are you?\\n", "source": "transcript:1"}, {"text": "A: I am doing great.\\n", "source": "ai"}]}',
         },
       }],
     }
@@ -116,8 +116,9 @@ describe('generate-topic endpoint', () => {
     expect(res.status).toBe(200)
     const data = await res.json()
     expect(data.topic.title).toBe('Greetings')
-    expect(data.topic.passage).toContain('Hello there')
-    expect(data.topic.passage).toContain('How are you')
+    expect(data.topic.segments).toHaveLength(3)
+    expect(data.topic.segments[0].source).toBe('ai')
+    expect(data.topic.segments[1].source).toBe('transcript:1')
 
     // Verify DeepSeek was called correctly
     const [deepseekUrl, deepseekOpts] = fetch.mock.calls[0]
@@ -127,7 +128,7 @@ describe('generate-topic endpoint', () => {
     expect(body.model).toBe('deepseek-chat')
     expect(body.messages[0].role).toBe('system')
     expect(body.messages[0].content).toContain('50%')
-    expect(body.messages[0].content).toContain('dialogue')
+    expect(body.messages[0].content).toContain('segments')
     expect(body.messages[1].content).toContain('Tech Talk')
   })
 
@@ -149,7 +150,7 @@ describe('generate-topic endpoint', () => {
 
   it('returns CORS headers on topic response', async () => {
     const deepseekResponse = {
-      choices: [{ message: { content: '{"title": "X", "passage": "A: Hi"}' } }],
+      choices: [{ message: { content: '{"title": "X", "segments": [{"text": "A: Hi\\n", "source": "ai"}]}' } }],
     }
     global.fetch = vi.fn().mockResolvedValue({
       json: () => Promise.resolve(deepseekResponse),
@@ -167,7 +168,7 @@ describe('generate-topic endpoint', () => {
     const deepseekResponse = {
       choices: [{
         message: {
-          content: '{"title": "Coffee Talk", "passage": "A: Can I get a latte please?\\nB: Sure, anything else?"}',
+          content: '{"title": "Coffee Talk", "segments": [{"text": "A: Can I get a latte please?\\n", "source": "transcript:1"}, {"text": "B: Sure, anything else?\\n", "source": "ai"}]}',
         },
       }],
     }

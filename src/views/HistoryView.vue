@@ -2,6 +2,7 @@
 import { ref, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTopicStore } from '../stores/topic'
+import { SOURCE_AI } from '../shared/schema'
 import {
   NButton, NDataTable, NModal, NText, NH1, NSpace,
 } from 'naive-ui'
@@ -54,8 +55,15 @@ const columns = [
     <NModal v-model:show="showPreview" preset="card" title="Topic Detail" style="width: 750px">
       <div v-if="previewTopic" style="max-height: 70vh; overflow-y: auto">
         <h2 style="margin-top: 0">{{ previewTopic.title }}</h2>
-        <div style="white-space: pre-wrap; line-height: 1.8; font-size: 16px">
-          {{ previewTopic.passage }}
+        <div style="line-height: 1.8; font-size: 16px">
+          <span
+            v-for="(s, i) in previewTopic.segments" :key="i"
+            :style="{
+              background: s.source !== SOURCE_AI ? '#f0f9eb' : 'transparent',
+              borderBottom: s.source !== SOURCE_AI ? '2px solid #b3e19d' : '2px solid transparent',
+            }"
+            :title="s.source !== SOURCE_AI ? 'From: ' + s.transcriptTitle : 'AI generated'"
+          >{{ s.text }}</span>
         </div>
       </div>
     </NModal>

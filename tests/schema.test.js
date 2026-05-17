@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { buildSystemPrompt, parseTopicResponse } from '../src/shared/schema'
+import { SOURCE_AI, buildSystemPrompt, parseTopicResponse } from '../src/shared/schema'
+
+describe('SOURCE_AI', () => {
+  it('is the string "ai"', () => {
+    expect(SOURCE_AI).toBe('ai')
+  })
+})
 
 describe('buildSystemPrompt', () => {
   it('requires English-only output', () => {
@@ -8,11 +14,10 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toContain('never output Chinese')
   })
 
-  it('requires continuous passage, not individual sentences', () => {
+  it('requires continuous dialogue with segments', () => {
     const prompt = buildSystemPrompt()
-    expect(prompt).toContain('continuous')
-    expect(prompt).toContain('passage')
-    expect(prompt).toContain('speaker labels')
+    expect(prompt).toContain('segments')
+    expect(prompt).toContain('dialogue')
   })
 
   it('allows adapting transcript sentences', () => {
@@ -26,21 +31,25 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toContain('50%')
   })
 
-  it('includes JSON schema with title and passage', () => {
+  it('includes JSON schema with segments array', () => {
     const prompt = buildSystemPrompt()
     expect(prompt).toContain('"title"')
-    expect(prompt).toContain('"passage"')
+    expect(prompt).toContain('"segments"')
+    expect(prompt).toContain('"text"')
+    expect(prompt).toContain('"source"')
   })
 })
 
 describe('parseTopicResponse', () => {
-  const validJson = '{"title": "My Topic", "passage": "A: Hello\\nB: Hi there\\nA: How are you?"}'
+  const validJson = '{"title": "My Topic", "segments": [{"text": "A: Hello\\n", "source": "ai"}, {"text": "B: Hi\\n", "source": "transcript:1"}]}'
 
-  it('parses a valid topic JSON', () => {
+  it('parses a valid topic JSON with segments', () => {
     const topic = parseTopicResponse(validJson)
     expect(topic.title).toBe('My Topic')
-    expect(topic.passage).toContain('Hello')
-    expect(topic.passage).toContain('Hi there')
+    expect(topic.segments).toHaveLength(2)
+    expect(topic.segments[0].text).toContain('Hello')
+    expect(topic.segments[0].source).toBe('ai')
+    expect(topic.segments[1].source).toBe('transcript:1')
   })
 
   it('parses JSON wrapped in extra text (LLM output)', () => {
@@ -63,19 +72,26 @@ describe('parseTopicResponse', () => {
   })
 
   it('throws on invalid JSON', () => {
-    expect(() => parseTopicResponse('{"title": "X", "passage": broken}')).toThrow('Failed to parse')
+    expect(() => parseTopicResponse('{"title": "X", "segments": broken}')).toThrow('Failed to parse')
   })
 
   it('throws when title is missing', () => {
-    expect(() => parseTopicResponse('{"passage": "Hello"}')).toThrow('missing valid title')
+    expect(() => parseTopicResponse('{"segments": []}')).toThrow('missing valid title')
   })
 
-  it('throws when passage is missing', () => {
-    expect(() => parseTopicResponse('{"title": "X"}')).toThrow('missing passage')
+  it('throws when segments is not an array', () => {
+    expect(() => parseTopicResponse('{"title": "X", "segments": "not-array"}')).toThrow('missing segments array')
   })
 
-  it('throws when passage is empty', () => {
-    expect(() => parseTopicResponse('{"title": "X", "passage": ""}')).toThrow('missing passage')
-    expect(() => parseTopicResponse('{"title": "X", "passage": "   "}')).toThrow('missing passage')
+  it('throws when segments is empty', () => {
+    expect(() => parseTopicResponse('{"title": "X", "segments": []}')).toThrow('missing segments array')
+  })
+
+  it('throws when a segment is missing text', () => {
+    expect(() => parseTopicResponse('{"title": "X", "segments": [{"source": "ai"}]}')).toThrow('missing text')
+  })
+
+  it('throws when a segment is missing source', () => {
+    expect(() => parseTopicResponse('{"title": "X", "segments": [{"text": "hello"}]}')).toThrow('missing source')
   })
 })

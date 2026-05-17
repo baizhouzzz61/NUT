@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useTranscriptStore } from '../stores/transcript'
 import { useTopicStore } from '../stores/topic'
 import { generateTopic } from '../api'
+import { SOURCE_AI } from '../shared/schema'
 import {
   NButton, NCheckbox, NInput, NModal, NText, NH1, NSpace,
   NCard, NTag, NSpin, useMessage
@@ -40,6 +41,15 @@ async function doGenerate() {
     const selected = transcriptStore.transcripts.filter(t => selectedIds.value.has(t.id))
     const slim = selected.map(({ id, title, content }) => ({ id, title, content }))
     const { topic } = await generateTopic(slim, topicPrompt.value.trim())
+
+    // Build transcript index → title map for source labels
+    const srcMap = {}
+    slim.forEach((t, i) => { srcMap[`transcript:${i + 1}`] = t.title })
+
+    topic.segments = topic.segments.map(s => ({
+      ...s,
+      transcriptTitle: s.source !== SOURCE_AI ? (srcMap[s.source] || null) : null,
+    }))
 
     topic.usedTranscriptIds = slim.map(t => t.id)
 
@@ -101,8 +111,15 @@ async function saveGenerated() {
         <template #header-extra>
           <NButton type="primary" size="small" @click="saveGenerated">Save to History</NButton>
         </template>
-        <div style="white-space: pre-wrap; line-height: 1.8; font-size: 16px">
-          {{ generatedTopic.passage }}
+        <div style="line-height: 1.8; font-size: 16px">
+          <span
+            v-for="(s, i) in generatedTopic.segments" :key="i"
+            :style="{
+              background: s.source !== SOURCE_AI ? '#f0f9eb' : 'transparent',
+              borderBottom: s.source !== SOURCE_AI ? '2px solid #b3e19d' : '2px solid transparent',
+            }"
+            :title="s.source !== SOURCE_AI ? 'From: ' + s.transcriptTitle : 'AI generated'"
+          >{{ s.text }}</span>
         </div>
       </NCard>
     </div>
