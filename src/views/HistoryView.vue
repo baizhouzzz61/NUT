@@ -3,14 +3,13 @@ import { ref, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTopicStore } from '../stores/topic'
 import { SOURCE_AI } from '../shared/schema'
+import ExampleSentence from '../components/ExampleSentence.vue'
 import {
-  NButton, NDataTable, NModal, NTabs, NTabPane, NText, NH1,
-  NSpace, NTag, NCard, useMessage
+  NButton, NDataTable, NModal, NTabs, NTabPane, NText, NH1, NSpace,
 } from 'naive-ui'
 
 const router = useRouter()
 const store = useTopicStore()
-const message = useMessage()
 
 const showPreview = ref(false)
 const previewTopic = ref(null)
@@ -65,28 +64,21 @@ const columns = [
 
         <NTabs v-model:value="previewTab">
           <NTabPane name="all" tab="All Examples">
-            <div v-for="(ex, i) in previewTopic.examples" :key="i" style="margin-bottom: 8px">
-              <NCard :bordered="false" size="small"
-                :style="ex.source !== SOURCE_AI
-                  ? 'background: #f0f9eb; border: 1px solid #b3e19d'
-                  : 'background: var(--n-color); border: 1px solid var(--n-border-color)'">
-                <NText>{{ i + 1 }}. {{ ex.text }}</NText>
-                <NTag size="tiny" :type="ex.source !== SOURCE_AI ? 'success' : 'default'" style="margin-left: 12px">
-                  {{ ex.source !== SOURCE_AI ? `From: ${ex.transcriptTitle}` : 'AI' }}
-                </NTag>
-              </NCard>
-            </div>
+            <ExampleSentence
+              v-for="(ex, i) in previewTopic.examples" :key="i"
+              :index="i + 1" :text="ex.text" :source="ex.source" :transcript-title="ex.transcriptTitle"
+              style="margin-bottom: 8px"
+            />
           </NTabPane>
           <NTabPane name="source" tab="From Transcripts">
-            <div v-for="(ex, i) in previewTopic.examples.filter(e => e.source !== SOURCE_AI)" :key="i" style="margin-bottom: 8px">
-              <NCard :bordered="false" size="small" style="background: #f0f9eb; border: 1px solid #b3e19d">
-                <NText>{{ i + 1 }}. {{ ex.text }}</NText>
-                <NTag size="tiny" type="success" style="margin-left: 12px">
-                  {{ ex.transcriptTitle }}
-                </NTag>
-              </NCard>
-            </div>
-            <NText v-if="!previewTopic.examples.filter(e => e.source !== SOURCE_AI).length" depth="3">
+            <template v-for="(ex, i) in previewTopic.examples" :key="i">
+              <ExampleSentence
+                v-if="ex.source !== SOURCE_AI"
+                :index="i + 1" :text="ex.text" :source="ex.source" :transcript-title="ex.transcriptTitle"
+                style="margin-bottom: 8px"
+              />
+            </template>
+            <NText v-if="!previewTopic.examples.some(e => e.source !== SOURCE_AI)" depth="3">
               No examples from transcripts.
             </NText>
           </NTabPane>

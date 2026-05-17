@@ -1,10 +1,11 @@
 <script setup>
-import { ref, h, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTranscriptStore } from '../stores/transcript'
 import { useTopicStore } from '../stores/topic'
 import { generateTopic } from '../api'
-import { enrichExamples, SOURCE_AI } from '../shared/schema'
+import { enrichExamples } from '../shared/schema'
+import ExampleSentence from '../components/ExampleSentence.vue'
 import {
   NButton, NCheckbox, NDataTable, NModal, NText, NH1, NSpace,
   NCard, NTag, NDivider, NSpin, NPopconfirm, useMessage
@@ -96,32 +97,22 @@ function preview(topic) {
         <template #header-extra>
           <NButton type="primary" size="small" @click="saveGenerated">Save to History</NButton>
         </template>
-        <div v-for="(ex, i) in generatedTopic.examples" :key="i" style="margin-bottom: 8px">
-          <div :style="{ padding: '8px 12px', borderRadius: '6px',
-            background: ex.source !== SOURCE_AI ? '#f0f9eb' : 'transparent',
-            border: ex.source !== SOURCE_AI ? '1px solid #b3e19d' : '1px solid #eee' }">
-            {{ i + 1 }}. {{ ex.text }}
-            <NTag size="tiny" :type="ex.source !== SOURCE_AI ? 'success' : 'default'" style="margin-left: 8px">
-              {{ ex.source !== SOURCE_AI ? `From: ${ex.transcriptTitle}` : 'AI' }}
-            </NTag>
-          </div>
-        </div>
+        <ExampleSentence
+          v-for="(ex, i) in generatedTopic.examples" :key="i"
+          :index="i + 1" :text="ex.text" :source="ex.source" :transcript-title="ex.transcriptTitle"
+          style="margin-bottom: 8px"
+        />
       </NCard>
     </div>
   </div>
 
   <NModal v-model:show="showPreview" title="Topic Detail" style="width: 700px">
     <div v-if="previewTopic" style="padding: 8px">
-      <div v-for="(ex, i) in previewTopic.examples" :key="i" style="margin-bottom: 8px">
-        <div :style="{ padding: '8px 12px', borderRadius: '6px',
-          background: ex.source !== SOURCE_AI ? '#f0f9eb' : 'transparent',
-          border: ex.source !== SOURCE_AI ? '1px solid #b3e19d' : '1px solid #eee' }">
-          {{ i + 1 }}. {{ ex.text }}
-          <NTag size="tiny" :type="ex.source !== SOURCE_AI ? 'success' : 'default'" style="margin-left: 8px">
-            {{ ex.source !== SOURCE_AI ? `From: ${ex.transcriptTitle}` : 'AI' }}
-          </NTag>
-        </div>
-      </div>
+      <ExampleSentence
+        v-for="(ex, i) in previewTopic.examples" :key="i"
+        :index="i + 1" :text="ex.text" :source="ex.source" :transcript-title="ex.transcriptTitle"
+        style="margin-bottom: 8px"
+      />
     </div>
   </NModal>
 </template>
